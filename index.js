@@ -393,7 +393,7 @@ Command.prototype.option = function(flags, description, fn, defaultValue) {
  * @api public
  */
 
-Command.prototype.parse = function(argv) {
+Command.prototype.parse = function(argv, defer) {
   // implicit help
   if (this.executables) this.addImplicitHelpCommand();
 
@@ -405,16 +405,21 @@ Command.prototype.parse = function(argv) {
 
   // process argv
   var parsed = this.parseOptions(this.normalize(argv.slice(2)));
+  var unknown = this.unknown = parsed.unknown;
   var args = this.args = parsed.args;
 
-  var result = this.parseArgs(this.args, parsed.unknown);
+  var result;
+  
+  if (!defer) {
+    result = this.parseArgs(this.args, this.unknown);
 
-  // executable sub-commands
-  var name = result.args[0];
-  if (this._execs[name] && typeof this._execs[name] != "function") {
-    return this.executeSubCommand(argv, args, parsed.unknown);
+    // executable sub-commands
+    var name = result.args[0];
+    if (this._execs[name] && typeof this._execs[name] != "function") {
+      return this.executeSubCommand(argv, args, parsed.unknown);
+    }  
   }
-
+ 
   return result;
 };
 
